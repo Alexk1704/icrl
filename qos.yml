@@ -1,0 +1,35 @@
+"ros_gz_bridge":
+  ros__parameters:
+    qos_overrides:
+      "/clock":
+        publisher:
+          history: "keep_last"
+          depth: 1
+          reliability: "best_effort"
+          durability: "volatile"
+          deadline: 100000000
+          lifespan: 100000000
+      "/vehicle/camera":
+        publisher:
+          history: "keep_last"
+          depth: 1
+          reliability: "best_effort"
+          durability: "volatile"
+          deadline: 100000000
+          lifespan: 100000000
+      "/vehicle/odo":
+        publisher:
+          history: "keep_last"
+          depth: 1
+          reliability: "best_effort"
+          durability: "volatile"
+          deadline: 100000000
+          lifespan: 100000000
+      "/vehicle/motor":
+        subscription:
+          history: "keep_last"
+          depth: 1
+          reliability: "best_effort"
+          durability: "volatile"
+          deadline: 100000000
+          lifespan: 100000000

@@ -1,0 +1,4 @@
+uint32[3] counter
+uint8 index
+---
+float32[2] quantization

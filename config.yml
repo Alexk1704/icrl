@@ -1,0 +1,61 @@
+# TOPICS
+# /clock@ros_gz_interfaces/msg/Clock[ignition.msgs.Clock
+- ros_topic_name: "/clock"
+  gz_topic_name: "/clock"
+  ros_type_name: "ros_gz_interfaces/msg/Clock"
+  gz_type_name: "ignition.msgs.Clock"
+  subscriber_queue: 0
+  publisher_queue: 0
+  lazy: false
+  direction: "GZ_TO_ROS"
+
+# /vehicle/camera@sensor_msgs/msg/Image[ignition.msgs.Image
+- ros_topic_name: "/vehicle/camera"
+  gz_topic_name: "/vehicle/camera"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "ignition.msgs.Image"
+  subscriber_queue: 0
+  publisher_queue: 0
+  lazy: false
+  direction: "GZ_TO_ROS"
+
+# /vehicle/odo@nav_msgs/msg/Odometry[ignition.msgs.Odometry
+- ros_topic_name: "/vehicle/odo"
+  gz_topic_name: "/vehicle/odo"
+  ros_type_name: "nav_msgs/msg/Odometry"
+  gz_type_name: "ignition.msgs.Odometry"
+  subscriber_queue: 0
+  publisher_queue: 0
+  lazy: false
+  direction: "GZ_TO_ROS"
+
+# /vehicle/motor@geometry_msgs/msg/Twist]ignition.msgs.Twist
+- ros_topic_name: "/vehicle/motor"
+  gz_topic_name: "/vehicle/motor"
+  ros_type_name: "geometry_msgs/msg/Twist"
+  gz_type_name: "ignition.msgs.Twist"
+  subscriber_queue: 0
+  publisher_queue: 0
+  lazy: false
+  direction: "ROS_TO_GZ"
+
+# SERVICES
+# /world/race_tracks_world/control@ros_gz_interfaces/srv/ControlWorld
+- ros_topic_name: "/world/race_tracks_world/control"
+  gz_topic_name: "/world/race_tracks_world/control"
+  ros_type_name: "ros_gz_interfaces/srv/ControlWorld"
+  gz_type_name: ""
+  subscriber_queue: 0
+  publisher_queue: 0
+  lazy: false
+  direction: "ROS_TO_GZ"
+
+# /world/race_tracks_world/set_pose@ros_gz_interfaces/srv/SetEntityPose
+- ros_topic_name: "/world/race_tracks_world/set_pose"
+  gz_topic_name: "/world/race_tracks_world/set_pose"
+  ros_type_name: "ros_gz_interfaces/srv/SetEntityPose"
+  gz_type_name: ""
+  subscriber_queue: 0
+  publisher_queue: 0
+  lazy: false
+  direction: "ROS_TO_GZ"

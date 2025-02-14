@@ -1,0 +1,6 @@
+uint32[3] counter
+---
+float32[2] clock
+uint8[3600] data
+float32[1] quantization
+bool done
