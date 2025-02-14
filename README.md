@@ -1,6 +1,6 @@
 # Intentional Continual Reinforcement Learning (ICRL)
 
-This framework is written to facilitate research in the field of Continual Reinforcement Learning (CRL) based on a robotic simulation running with Gazebo and ROS2. The reinforcement learning policy is defined by a high-level package written in Python, supporting the use of common ML frameworks such as TensorFlow and PyTorch. We use a differential-drive robot ([Pololu 3pi robot](https://www.pololu.com/product/975)) to investigate the line following scenario, but it is easy to extend it to other simulation scenarios.
+This framework is written to facilitate research in the field of Continual Reinforcement Learning (CRL) based on a robotic simulation running with Gazebo and ROS2. The reinforcement learning policy is defined by a high-level package written in Python, supporting the use of common ML frameworks such as TensorFlow and PyTorch. We use a differential-drive robot ([Pololu 3pi robot](https://www.pololu.com/product/975)) to investigate the line following scenario, but it is easy to extend it to other simulation scenarios. The `main` branch uses a software version based on RLLib (client-side code), while the `no-rllib` branch operates on a custom solution.
 
 This library was used to generate the empirical data for two accepted conference articles:
 
