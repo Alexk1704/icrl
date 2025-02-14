@@ -13,7 +13,7 @@ from utils import tools
 from utils.Analyzer import Analyzer
 from utils.Visualizer import Visualizer
 
-from gazebo_sim.utils.Evaluation import *
+from rllib_gazebo.utils.Evaluation import *
 
 
 LOOKUPS = {
@@ -72,24 +72,24 @@ def create(kwargs, fig=None, axs=None):
     if axs is None: axs = V.new_plot(fig, title='', axes=[kwargs['detail'], ''], align=kwargs['align'], legend=True)
     return fig, axs
 
-def finish(kwargs, fig=None, axs=None, flag=''):
+def finish(kwargs, fig=None, axs=None):
     if fig is None: fig = V.current_figure()
     if axs is None: axs = V.current_plot()
 
     path = None
     if kwargs['mode'] == 'save':
-        dirname = os.path.join(kwargs['path'], kwargs['module'], flag)
-        filename = '.'.join([kwargs['name'], kwargs['format']])
+        dirname = os.path.join(kwargs['path'], kwargs['module'])
+        filename = '.'.join(kwargs['name'], kwargs['format'])
         path = os.path.join(dirname, filename)
         tools.ensure_path(path)
     V.generate(fig, path)
 
-def generic_plot(data, labels, fig=None, axs=None, flag=''):
+def generic_plot(data, labels, fig=None, axs=None):
     func, data = check_data(data)
     if func is not None and data is not None:
         fig, axs = create(KWARGS, fig, axs)
-        func(data, labels, KWARGS, fig, axs, flag)
-        finish(KWARGS, fig, axs, flag)
+        func(data, labels, KWARGS, fig, axs)
+        finish(KWARGS, fig, axs)
 
 # 1-d data vs n-d data
 # discrete vs continuous data
@@ -130,371 +130,20 @@ def content_2(data, labels, kwargs, fig, axs):
             elif 'stem' in kwargs['type']: V.stem_2D(axs, labels, entry[:, 0], entry[:, 1])
             elif 'step' in kwargs['type']: V.step_2D(axs, labels, entry[:, 0], entry[:, 1])
 
-def content_3(data, labels, kwargs, fig, axs, flag):
+def content_3(data, labels, kwargs, fig, axs):
     for i, entry in enumerate(data):
-        # if i > 0 and kwargs['plot'] == 'multiple':
-        #     fig, axs = create(kwargs, fig, None)
-
-        # entry = A.clip(entry, -2, +1000)
-        print('###')
-        print('stats:', A.stats(entry))
-        print('###')
-
-        counters = DATA['info']['counters']
-        sequence = DATA['info']['tasks']
-
-        tasks = []
-        for index, task in enumerate(sequence):
-            if '' in task['mode']: tasks.append(index)
-            # if 'eval' in task['mode']: tasks.append(index)
-            # if 'train' in task['mode']: tasks.append(index)
-
-        counters = [counters[task] for task in tasks]
-        sequence = [sequence[task] for task in tasks]
-
-        if flag in ['s', 'a', 'r', 'ra', 'raav1', 'raav2']:
-            temp = []
-            lower, upper = 0, 0
-            for episodes in counters:
-                for episode in episodes:
-                    upper = lower + episode
-                    temp.extend(entry[lower:upper])
-                    lower = upper
-
-            entry = np.array(temp)
-
-            index = 0
-            for t, episodes in enumerate(counters[:-1]):
-                axs.text(np.average([index, index + sum(episodes)]), 0, f' T{t + 1}', ha='center', va='bottom', rotation=90)
-                # axs.text(np.average([index, index + sum(episodes)]), 0, f' Task {t + 1} ({sequence[t]["mode"]})', ha='center', va='bottom', rotation=90)
-                index += sum(episodes)
-                # index += len(episodes)
-                axs.axvline(index, color='black', alpha=0.75, linewidth=1, linestyle=(0, (5, 10)))
-            axs.text(np.average([index, index + sum(counters[-1])]), 0, f' T{t + 2}', ha='center', va='bottom', rotation=90)
-            # axs.text(np.average([index, index + sum(counters[-1])]), 0, f' Task {t + 2} ({sequence[t + 1]["mode"]})', ha='center', va='bottom', rotation=90)
-
-            terminal = np.full_like(temp, np.nan)
-
-            index = 0
-            for episodes in counters:
-                for episode in episodes[:-1]:
-                    index += episode
-                    terminal[index] = 0
-                index += episodes[-1]
-
-        if flag == 's':
-            # smoothed state
-            temp = pd.Series(np.reshape(entry, -1)).rolling(window=10).mean()
-            # temp = pd.Series(np.reshape(entry, -1)).rolling(window=10).median()
-
-            #fig, axs = create(kwargs, fig, None)
-            V.curve_2D(axs, labels, None, temp, alpha=0.75, linewidth=0.5)
-            # V.scatter_2D(axs, labels, None, temp, alpha=0.75, linewidth=0.5, s=10)
-            V.scatter_2D(axs, labels, None, terminal, alpha=0.75, linewidth=0.5, s=10, c='red', marker='x')
-
-            V.current_plot().set_title('observed states')
-            V.current_plot().set_xlabel('agent step')
-            V.current_plot().set_ylabel('normalized value')
-
-        if flag == 'a':
-            # smoothed action
-            temp = np.subtract(entry[:, 0], entry[:, 1])
-
-            temp = pd.Series(np.reshape(temp, -1)).rolling(window=10).mean()
-            # temp = pd.Series(np.reshape(temp, -1)).rolling(window=10).median()
-
-            #fig, axs = create(kwargs, fig, None)
-            V.curve_2D(axs, labels, None, temp, alpha=0.75, linewidth=0.5)
-            # V.scatter_2D(axs, labels, None, temp, alpha=0.75, linewidth=0.5, s=10)
-            V.scatter_2D(axs, labels, None, terminal, alpha=0.75, linewidth=0.5, s=10, c='red', marker='x')
-
-            V.current_plot().set_title('conducted action')
-            V.current_plot().set_xlabel('agent step')
-            V.current_plot().set_ylabel('direction tendency')
-
-        if flag == 'ac':
-            # accumulated action
-            temp = np.subtract(entry[:, 0], entry[:, 1])
-
-            temp = pd.Series(np.reshape(temp, -1)).cumsum()
-
-            #fig, axs = create(kwargs, fig, None)
-            V.curve_2D(axs, labels, None, temp, alpha=0.75, linewidth=0.5)
-            # V.scatter_2D(axs, labels, None, temp, alpha=0.75, linewidth=0.5, s=10)
-            V.scatter_2D(axs, labels, None, terminal, alpha=0.75, linewidth=0.5, s=10, c='red', marker='x')
-
-            V.current_plot().set_title('conducted action')
-            V.current_plot().set_xlabel('agent step')
-            V.current_plot().set_ylabel('accumulated direction')
-
-        if flag == 'accv1':
-            # averaged accumulated action (sum-avg)
-            temp = np.subtract(entry[:, 0], entry[:, 1])
-
-            temp = pd.Series(np.reshape(temp, -1)).cumsum()
-            temp = pd.Series(np.reshape(temp, -1)).rolling(window=10).mean()
-            # temp = pd.Series(np.reshape(temp, -1)).rolling(window=10).median()
-
-            #fig, axs = create(kwargs, fig, None)
-            V.curve_2D(axs, labels, None, temp, alpha=0.75, linewidth=0.5)
-            # V.scatter_2D(axs, labels, None, temp, alpha=0.75, linewidth=0.5, s=10)
-            V.scatter_2D(axs, labels, None, terminal, alpha=0.75, linewidth=0.5, s=10, c='red', marker='x')
-
-            V.current_plot().set_title('conducted action')
-            V.current_plot().set_xlabel('agent step')
-            V.current_plot().set_ylabel('accumulated direction')
-
-        if flag == 'accv2':
-            # averaged accumulated action (avg-sum)
-            temp = np.subtract(entry[:, 0], entry[:, 1])
-
-            temp = pd.Series(np.reshape(temp, -1)).rolling(window=10).mean()
-            # temp = pd.Series(np.reshape(temp, -1)).rolling(window=10).median()
-            temp = pd.Series(np.reshape(temp, -1)).cumsum()
-
-            #fig, axs = create(kwargs, fig, None)
-            V.curve_2D(axs, labels, None, temp, alpha=0.75, linewidth=0.5)
-            # V.scatter_2D(axs, labels, None, temp, alpha=0.75, linewidth=0.5, s=10)
-            V.scatter_2D(axs, labels, None, terminal, alpha=0.75, linewidth=0.5, s=10, c='red', marker='x')
-
-            V.current_plot().set_title('conducted action')
-            V.current_plot().set_xlabel('agent step')
-            V.current_plot().set_ylabel('accumulated direction')
-
-        if flag == 'r':
-            # averaged reward
-            temp = pd.Series(np.reshape(entry, -1)).rolling(window=10).mean()
-            # temp = pd.Series(np.reshape(entry, -1)).rolling(window=10).median()
-
-            #fig, axs = create(kwargs, fig, None)
-            V.curve_2D(axs, labels, None, temp, alpha=0.75, linewidth=0.5)
-            # V.scatter_2D(axs, labels, None, temp, alpha=0.75, linewidth=0.5, s=10)
-            V.scatter_2D(axs, labels, None, terminal, alpha=0.75, linewidth=0.5, s=10, c='red', marker='x')
-
-            V.current_plot().set_title('reward signal')
-            V.current_plot().set_xlabel('agent step')
-            V.current_plot().set_ylabel('normalized value')
-
-        if flag == 'ra':
-            # accumulated reward
-            temp = pd.Series(np.reshape(entry, -1)).cumsum()
-
-            #fig, axs = create(kwargs, fig, None)
-            V.curve_2D(axs, labels, None, temp, alpha=0.75, linewidth=0.5)
-            # V.scatter_2D(axs, labels, None, temp, alpha=0.75, linewidth=0.5, s=10)
-            V.scatter_2D(axs, labels, None, terminal, alpha=0.75, linewidth=0.5, s=10, c='red', marker='x')
-
-            V.current_plot().set_title('reward signal')
-            V.current_plot().set_xlabel('agent step')
-            V.current_plot().set_ylabel('accumulated value')
-
-        if flag == 'raav1':
-            # averaged accumulated reward (sum-avg)
-            temp = pd.Series(np.reshape(entry, -1)).cumsum()
-            temp = pd.Series(np.reshape(temp, -1)).rolling(window=10).mean()
-            # temp = pd.Series(np.reshape(temp, -1)).rolling(window=10).median()
-
-            #fig, axs = create(kwargs, fig, None)
-            V.curve_2D(axs, labels, None, temp, alpha=0.75, linewidth=0.5)
-            # V.scatter_2D(axs, labels, None, temp, alpha=0.75, linewidth=0.5, s=10)
-            V.scatter_2D(axs, labels, None, terminal, alpha=0.75, linewidth=0.5, s=10, c='red', marker='x')
-
-            V.current_plot().set_title('reward signal')
-            V.current_plot().set_xlabel('agent step')
-            V.current_plot().set_ylabel('accumulated value')
-
-        if flag == 'raav2':
-            # averaged accumulated reward (avg-sum)
-            temp = pd.Series(np.reshape(entry, -1)).rolling(window=10).mean()
-            # temp = pd.Series(np.reshape(entry, -1)).rolling(window=10).median()
-            temp = pd.Series(np.reshape(temp, -1)).cumsum()
-
-            #fig, axs = create(kwargs, fig, None)
-            V.curve_2D(axs, labels, None, temp, alpha=0.75, linewidth=0.5)
-            # V.scatter_2D(axs, labels, None, temp, alpha=0.75, linewidth=0.5, s=10)
-            V.scatter_2D(axs, labels, None, terminal, alpha=0.75, linewidth=0.5, s=10, c='red', marker='x')
-
-            V.current_plot().set_title('reward signal')
-            V.current_plot().set_xlabel('agent step')
-            V.current_plot().set_ylabel('accumulated value')
-
-        if flag in ['rs', 'rl', 're']:
-            lower, upper = 0, 0
-            score, length = [], []
-            for episodes in counters:
-                for episode in episodes:
-                    upper = lower + episode
-                    score.append(sum(entry[lower:upper]))
-                    length.append(len(entry[lower:upper]))
-                    lower = upper
-
-            score = np.array(score).flatten()
-            length = np.array(length).flatten()
-            effect = np.divide(score, length)
-
-            # print(score.shape)
-            # print(length.shape)
-            # print(effect.shape)
-
-            index = 0
-            for t, episodes in enumerate(counters[:-1]):
-                axs.text(np.average([index, index + len(episodes)]), 0, f' T{t + 1}', ha='center', va='bottom', rotation=90)
-                # axs.text(np.average([index, index + len(episodes)]), 0, f' Task {t + 1} ({sequence[t]["mode"]})', ha='center', va='bottom', rotation=90)
-                # index += sum(episodes)
-                index += len(episodes)
-                axs.axvline(index, color='black', alpha=0.75, linewidth=1, linestyle=(0, (5, 10)))
-            axs.text(np.average([index, index + len(counters[-1])]), 0, f' T{t + 2}', ha='center', va='bottom', rotation=90)
-            # axs.text(np.average([index, index + len(counters[-1])]), 0, f' Task {t + 2} ({sequence[t + 1]["mode"]})', ha='center', va='bottom', rotation=90)
-
-        if flag == 'rs':
-            # scatter by score and length
-            #fig, axs = create(kwargs, fig, None)
-            V.scatter_2D(axs, labels, None, score, c=score, s=length, alpha=0.75, linewidth=0.5, cmap='viridis')
-            # V.scatter_2D(axs, labels, None, score, c=length, s=length, alpha=0.75, linewidth=0.5, cmap='viridis')
-
-            V.current_plot().set_title('trajectory by score')
-            V.current_plot().set_xlabel('agent episode')
-            V.current_plot().set_ylabel('total value')
-
-        if flag == 'rl':
-            # scatter by length and score
-            #fig, axs = create(kwargs, fig, None)
-            V.scatter_2D(axs, labels, None, length, c=length, s=score, alpha=0.75, linewidth=0.5, cmap='viridis')
-            # V.scatter_2D(axs, labels, None, length, c=score, s=score, alpha=0.75, linewidth=0.5, cmap='viridis')
-
-            V.current_plot().set_title('trajectory by length')
-            V.current_plot().set_xlabel('agent episode')
-            V.current_plot().set_ylabel('total value')
-
-        if flag == 're':
-            # scatter by length and score
-            #fig, axs = create(kwargs, fig, None)
-            V.scatter_2D(axs, labels, None, effect, c=score, s=length, alpha=0.75, linewidth=0.5, cmap='viridis')
-            # V.scatter_2D(axs, labels, None, effect, c=length, s=score, alpha=0.75, linewidth=0.5, cmap='viridis')
-
-            V.current_plot().set_title('trajectory by effect (score / length)')
-            V.current_plot().set_xlabel('agent episode')
-            V.current_plot().set_ylabel('total value')
-
-        if flag == 're':
-            result = {}
-
-            lookup_array = {
-                'raw': entry
-            }
-
-            for key, value in lookup_array.items():
-                result[key] = []
-
-                lower, upper = 0, 0
-                for episodes in counters:
-                    upper = lower + sum(episodes)
-                    # upper = lower + len(episodes)
-                    task = value[lower:upper]
-                    lower = upper
-
-                    result[key].append({
-                        'min': float(np.min(task, axis=None)),
-                        'max': float(np.max(task, axis=None)),
-                        'ptp': float(np.ptp(task, axis=None)),
-                        'avg': float(np.average(task, axis=None)),
-                        'var': float(np.var(task, axis=None)),
-                        'std': float(np.std(task, axis=None)),
-                    })
-
-            lookup_array = {
-                'score': score,
-                'length': length,
-                'effect': effect,
-            }
-
-            for key, value in lookup_array.items():
-                result[key] = []
-
-                lower, upper = 0, 0
-                for episodes in counters:
-                    # upper = lower + sum(episodes)
-                    upper = lower + len(episodes)
-                    task = value[lower:upper]
-                    lower = upper
-
-                    result[key].append({
-                        'min': float(np.min(task, axis=None)),
-                        'max': float(np.max(task, axis=None)),
-                        'ptp': float(np.ptp(task, axis=None)),
-                        'avg': float(np.average(task, axis=None)),
-                        'var': float(np.var(task, axis=None)),
-                        'std': float(np.std(task, axis=None)),
-                    })
-
-            print('###')
-            print('results:', result)
-            print('###')
-
-            if kwargs['mode'] == 'save':
-                dirname = os.path.join(kwargs['path'], kwargs['module'])
-                filename = '.'.join([kwargs['name'], 'json'])
-                path = os.path.join(dirname, filename)
-                tools.ensure_path(path)
-
-                import json
-                with open(path, 'w') as fp:
-                    json.dump(result, fp)
-
-
-        if flag in ['sd', 'ad', 'rd']:
-            shape = entry.shape[1:]
-            entry = entry[~np.isnan(entry)]
-            entry = entry.reshape((-1, *shape))
-
-            # fig, axs = create(kwargs, fig, None)
-            # labels, entry = np.unique(entry, return_counts=True)
-            # V.pie_1D(axs, labels, entry)
-
-            # fig, axs = create(kwargs, fig, None)
-            if 'a' in flag:
-                uniq = np.unique(entry)
-                bins = [*uniq, uniq[-1] + (uniq[-1] - uniq[-2])]
-                V.hist_1D(axs, labels, entry.astype(np.float32), bins=bins, align='left')
-            else:
-                V.hist_1D(axs, labels, entry.astype(np.float32))
-
-            if 's' in flag:
-                V.current_plot().set_title('state frequency')
-                V.current_plot().set_xlabel('value')
-                V.current_plot().set_ylabel('count')
-            if 'a' in flag:
-                V.current_plot().set_title('action frequency')
-                V.current_plot().set_xlabel('value')
-                V.current_plot().set_ylabel('count')
-            if 'r' in flag:
-                V.current_plot().set_title('action frequency')
-                V.current_plot().set_xlabel('value')
-                V.current_plot().set_ylabel('count')
-
+        if i > 0 and kwargs['plot'] == 'multiple':
             fig, axs = create(kwargs, fig, None)
-            V.violin_1D(axs, labels, entry.astype(np.float32), orientation='h')
-
-            if 's' in flag:
-                V.current_plot().set_title('state distribution')
-                V.current_plot().set_xlabel('value')
-                V.current_plot().set_ylabel('frequency')
-            if 'a' in flag:
-                V.current_plot().set_title('action distribution')
-                V.current_plot().set_xlabel('value')
-                V.current_plot().set_ylabel('frequency')
-            if 'r' in flag:
-                V.current_plot().set_title('action distribution')
-                V.current_plot().set_xlabel('value')
-                V.current_plot().set_ylabel('frequency')
-
-        '''
+        entry = A.clip(entry, -2, +1000)
+        print(A.stats(entry))
+        # labels, entry = np.unique(entry, return_counts=True)
+        # V.pie_1D(axs, labels, entry)
+        V.hist_1D(axs, labels, entry.astype(np.float32))
         fig, axs = create(kwargs, fig, None)
-        V.curve_2D(axs, labels, None, entry, alpha=0.75, linewidth=0.5)
+        V.violin_1D(axs, labels, entry.astype(np.float32), orientation='h')
         fig, axs = create(kwargs, fig, None)
-        V.scatter_2D(axs, labels, None, entry, alpha=0.75, linewidth=0.5, s=10)
-        '''
-
+        V.curve_2D(axs, labels, None, entry)
+        V.scatter_2D(axs, labels, None, entry)
         if kwargs['category'] == 'timeseries':
             if kwargs['type'] == '': pass
             # size
@@ -522,7 +171,6 @@ def generate_iterable(data_struct, kwargs):
         for wrap_id in data_struct[eval_id]:
             for comb_id in data_struct[eval_id][wrap_id]:
                 for run_id in data_struct[eval_id][wrap_id][comb_id]:
-
                     if kwargs['debug'] == 'yes': debug(data_struct[eval_id][wrap_id][comb_id][run_id])
                     yield data_struct[eval_id][wrap_id][comb_id][run_id]
                     # print(sub_task.keys())
@@ -635,8 +283,7 @@ def extract_debug(entities, ignore_mode=True):
         stacked = None
     else:
         labels = list(wrapper.keys())
-        # stacked = [{key: np.concatenate([entry[key].reshape(-1, 1, entry[key].shape[-1]) for entry in value]) for key in value[0].keys()} for value in wrapper.values()]
-        stacked = [{key: [entry[key].reshape(-1, 1, entry[key].shape[-1]) for entry in value] for key in value[0].keys()} for value in wrapper.values()]
+        stacked = [{key: np.concatenate([entry[key].reshape(-1, 1, entry[key].shape[-1]) for entry in value]) for key in value[0].keys()} for value in wrapper.values()]
 
     return labels, stacked
 
@@ -711,6 +358,7 @@ def build_samples(structure, include=[], exclude=[]):
                 try: data[attribute].append(value)
                 except: data[attribute] = [value]
         results.append({key: np.array(values) for key, values in data.items()})
+
     return results
 
 def group_samples(structure, mode=None):

@@ -39,6 +39,16 @@
   lazy: false
   direction: "ROS_TO_GZ"
 
+# /vehicle/motor@geometry_msgs/msg/Twist]ignition.msgs.Twist
+- ros_topic_name: "/vehicle/motor"
+  gz_topic_name: "/vehicle/motor"
+  ros_type_name: "geometry_msgs/msg/Twist"
+  gz_type_name: "ignition.msgs.Twist"
+  subscriber_queue: 0
+  publisher_queue: 0
+  lazy: false
+  direction: "ROS_TO_GZ"
+
 # SERVICES
 # /world/race_tracks_world/control@ros_gz_interfaces/srv/ControlWorld
 - ros_topic_name: "/world/race_tracks_world/control"

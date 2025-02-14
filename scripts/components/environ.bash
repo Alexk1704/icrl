@@ -125,7 +125,7 @@ environ_export "REMOTE_MOUNT" "$(environ_basepath ${!REMOTE_MOUNTS[@]})"
 
 # MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC
 environ_export "SCRATCH" "REMOTE_MOUNT" # should be handled like HOME
-environ_export "PROJECT" "gazebo_sim"
+environ_export "PROJECT" "rllib_gazebo"
 
 environ_export "ROS_SANDBOX" "ros2"
 
@@ -143,16 +143,12 @@ case "${COMMON_CONFIG['PATH']}" in
     "shared")   actual_path="${PROJECT}" ;;
     "isolated") actual_path="${USER}/${PROJECT}" ;;
 esac
-
-# HACK!!
-# actual_path="gepperth2/${PROJECT}"
 # MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC - MISC
 
 # PATH - PATH - PATH - PATH - PATH - PATH - PATH - PATH - PATH - PATH - PATH - PATH - PATH - PATH - PATH - PATH - PATH - PATH
 environ_export "ORG_PATH" "HOME_MOUNT"
 environ_export "SIF_PATH" "ORG_PATH/sif"
 environ_export "GIT_PATH" "ORG_PATH/git"
-# export GIT_PATH=/home/gepperth/research/programming/python
 
 environ_export "TMP_PATH" "TEMP_MOUNT/${actual_path}"
 environ_export "BLD_PATH" "TMP_PATH/bld"
@@ -162,9 +158,6 @@ environ_export "OPT_PATH" "HOME_MOUNT/${actual_path}"
 environ_export "SCM_PATH" "OPT_PATH/scm"
 environ_export "VAR_PATH" "OPT_PATH/var"
 
-# path to workspace folder
-# base_path will be /tmp/user for local exec. mode
-# when copying to /tmp folder, the source folder is reorganized so it does no longer match the original icrl structure
 environ_export "WIP_PATH" "${base_path}/${actual_path}"
 environ_export "SRC_PATH" "WIP_PATH/src"
 environ_export "DAT_PATH" "WIP_PATH/dat"
@@ -221,5 +214,11 @@ environ_export "GZ_VERSION"           "8"
 environ_export "GZ_DISTRO"            "harmonic"
 environ_export "GZ_IP"                "127.0.0.1"
 environ_export "GZ_PARTITION"         "$(hostname)"
-environ_export "GZ_SIM_RESOURCE_PATH" "${GZ_SIM_RESOURCE_PATH:+${GZ_SIM_RESOURCE_PATH}:}${GIT_PATH}/icrl/models"
+environ_export "GZ_SIM_RESOURCE_PATH" "${GZ_SIM_RESOURCE_PATH:+${GZ_SIM_RESOURCE_PATH}:}${SRC_PATH}/icrl/models"
 # GZ - GZ - GZ - GZ - GZ - GZ - GZ - GZ - GZ - GZ - GZ - GZ - GZ - GZ - GZ - GZ - GZ - GZ - GZ - GZ - GZ - GZ - GZ - GZ - GZ
+
+# RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY
+environ_export "TUNE_TEMP_DIR"                      "/tmp/ray"
+environ_export "TUNE_RESULT_DIR"                    "/tmp/ray_results"
+environ_export "TUNE_DISABLE_AUTO_CALLBACK_LOGGERS" "1"
+# RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY - RAY

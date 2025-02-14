@@ -62,6 +62,12 @@ function wipe_execute {
 wipe_condition "TEMP" "wandb" "all" &&
 wipe_execute "wandb" "/tmp/*wandb*"
 
+wipe_condition "TEMP" "ray" "all" &&
+wipe_execute "ray" "${TUNE_TEMP_DIR}"
+
+wipe_condition "TEMP" "ray" "all" &&
+wipe_execute "ray result" "${TUNE_RESULT_DIR}"
+
 wipe_condition "TEMP" "log" "all" &&
 wipe_execute "ros log" "${HOME}/.ros"
 

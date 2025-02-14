@@ -96,8 +96,7 @@ class Visualizer():
         return plt.gca()
 
     def generate(self, fig, path=None):
-        # plt.legend()
-        # plt.colorbar()
+        plt.legend()
         plt.tight_layout()
 
         if path is None: plt.show()

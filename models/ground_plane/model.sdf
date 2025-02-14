@@ -5,7 +5,6 @@
 		<pose>0 0 0 0 0 0</pose>
 		<link name="link">
 			<collision name="collision">
-                        <surface><friction><ode><mu>100000</mu><mu2>10000</mu2></ode></friction></surface>
 				<geometry>
 					<plane>
 						<normal>0 0 1</normal>
@@ -26,7 +25,7 @@
 					<specular>0.8 0.8 0.8 1</specular>
 					<pbr>
 						<metal>
-	        				<albedo_map>tracks/test.png</albedo_map>
+	        				<albedo_map>tracks/active.png</albedo_map>
 						</metal>
 					</pbr>
 				</material>

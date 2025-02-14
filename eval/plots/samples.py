@@ -16,13 +16,13 @@ def entry(struct, kwargs):
     helpers.exec(struct, kwargs, return_plots())
 
 def return_plots():
-    # yield plot_static
-    # yield plot_random
-    # yield plot_clock
+    yield plot_static
+    yield plot_random
+    yield plot_clock
     yield plot_state
     yield plot_action
     yield plot_reward
-    # yield plot_duration
+    yield plot_duration
 
 
 # each entity itself
@@ -41,21 +41,15 @@ def plot_clock():
 
 def plot_state():
     labels, data = helpers.extract_sample(['state'])
-    helpers.generic_plot(data, labels, flag='s')
-    helpers.generic_plot(data, labels, flag='sd')
+    helpers.generic_plot(data, labels)
 
 def plot_action():
     labels, data = helpers.extract_sample(['action'])
-    helpers.generic_plot(data, labels, flag='a')
-    helpers.generic_plot(data, labels, flag='ad')
+    helpers.generic_plot(data, labels)
 
 def plot_reward():
     labels, data = helpers.extract_sample(['reward'])
-    helpers.generic_plot(data, labels, flag='r')
-    helpers.generic_plot(data, labels, flag='rd')
-    helpers.generic_plot(data, labels, flag='rs')
-    helpers.generic_plot(data, labels, flag='rl')
-    helpers.generic_plot(data, labels, flag='re')
+    helpers.generic_plot(data, labels)
 
 def plot_duration():
     labels, data = helpers.extract_sample(['duration'])

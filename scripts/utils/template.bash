@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #############################################################################################################################
-# This script keeps all settings to customize the execution behavior of the gazebo_sim project!                             #
+# This script keeps all settings to customize the execution behavior of the rllib_gazebo project!                           #
 #                                                                                                                           #
 # You can setup both, the global behavior (COMMON_CONFIG) and local behaviors (<COMPONENT>_CONFIG).                         #
 # For each component parameters are defined together wither their corresponding value as hashmap.                           #

@@ -71,6 +71,71 @@ def grid(e):
     straight(-e, 0, 2 * e, 'x')
     straight(0, -e, 2 * e, 'y')
 
+# t.clone()
+# t.heading()
+# t.clear()
+# t.clearstamp()
+# t.degrees()
+# t.distance()
+# t.done()
+# t.goto()
+# t.hideturtle()
+# t.pencolor()
+# t.pensize()
+# t.position()
+# t.radians()
+# t.reset()
+# t.setheading()
+# t.setposition()
+# t.shape()
+# t.shapesize()
+# t.shapetransform()
+# t.speed()
+# t.stamp()
+# t.towards()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def straight(x, y, o, l):
     x, y, l = scale(x, y, l)
 
@@ -888,41 +953,21 @@ N_to_S = int(np.abs(np.diff([N_bound, S_bound]))[0])
 E_to_W = int(np.abs(np.diff([E_bound, W_bound]))[0])
 
 straight(-450, S_bound, 'y', N_to_S)
-
-# snake(-350-2.5*np.pi, S_bound, 'y', N_to_S, 5, 180)
-# mesh(-250+2.5*np.pi, S_bound, 'y', N_to_S, 5, 180)
-# slalom_special(-150, S_bound, 'y', N_to_S, 20, 180)
-# slalom_special_double(-50, S_bound, 'y', N_to_S, 20, 180)
-
-rounded(50, +250, 'y', 2, 1)
-rounded(100, +250, 'y', 2, 2)
-rounded(150, +250, 'y', 2, 2.5)
-rounded(200, +250, 'y', 2, 5)
-rounded(250, +250, 'y', 2, 7.5)
-rounded(300, +250, 'y', 2, 10)
-
-circle(50, +200, 'y', 1)
-circle(100, +200, 'y', 2)
-circle(150, +200, 'y', 2.5)
-circle(200, +200, 'y', 5)
-circle(250, +200, 'y', 7.5)
-circle(300, +200, 'y', 10.)
-
-
-# zero(-34, -10, 2)
-# zero(-35, -10, 1)
-# zero(-35.5, -10, 0.5)
-
-# spiral_in_circle_special_double_r(125, -245, 'y', 10, 90)
-# spiral_in_circle_special_double_l(375, -245, 'y', 10, 90)
-# spiral_in_circle_special_r(75-2*np.pi-1, -425, 'y', 10, -100)
-# spiral_in_circle_special_l(175+2*np.pi+1, -425, 'y', 10, -100)
-# spiral_in_circle_special_r(325-2*np.pi-1, -425, 'y', 10, 100)
-# spiral_in_circle_special_l(425+2*np.pi+1, -425, 'y', 10, 100)
-# spiral_in_rounded_special_r(250, 270, 'y', 10, 2, 85, 180)
-# spiral_in_rounded_special_l(250, 270 +85*np.pi/2, 'y', 10, 2, 85, 180)
-# spiral_in_rounded_special_r(250, 90, 'y', 10, 2, -85, 180)
-# spiral_in_rounded_special_l(250, 90-85*np.pi/2, 'y', 10, 2, -85, 180)
+snake(-350-2.5*np.pi, S_bound, 'y', N_to_S, 5, 180)
+mesh(-250+2.5*np.pi, S_bound, 'y', N_to_S, 5, 180)
+slalom_special(-150, S_bound, 'y', N_to_S, 20, 180)
+slalom_special_double(-50, S_bound, 'y', N_to_S, 20, 180)
+# rounded(250, +250, 'y', 2, 5)
+spiral_in_circle_special_double_r(125, -245, 'y', 10, 90)
+spiral_in_circle_special_double_l(375, -245, 'y', 10, 90)
+spiral_in_circle_special_r(75-2*np.pi-1, -425, 'y', 10, -100)
+spiral_in_circle_special_l(175+2*np.pi+1, -425, 'y', 10, -100)
+spiral_in_circle_special_r(325-2*np.pi-1, -425, 'y', 10, 100)
+spiral_in_circle_special_l(425+2*np.pi+1, -425, 'y', 10, 100)
+spiral_in_rounded_special_r(250, 270, 'y', 10, 2, 85, 180)
+spiral_in_rounded_special_l(250, 270 +85*np.pi/2, 'y', 10, 2, 85, 180)
+spiral_in_rounded_special_r(250, 90, 'y', 10, 2, -85, 180)
+spiral_in_rounded_special_l(250, 90-85*np.pi/2, 'y', 10, 2, -85, 180)
 
 # canvas = s.getcanvas()
 # canvas.postscript(file='temp.ps')
@@ -1104,6 +1149,10 @@ if sys.argv[1] == 'draw':
     straight(-40, -20, 40)
     straight(-39.5, -20, 40)
     straight(-39, -20, 40)
+
+    circle(-34, 10, 2)
+    circle(-35, 10, 1)
+    circle(-35.5, 10, 0.5)
 
     #hills(-34, 0, 40, 2)
     up_n_down(-34, 0, 40, 2)

@@ -16,7 +16,7 @@ fi
 if [[ "${1}" == "node" ]]
     then
         export SCRATCH_MNT="/mnt/scratch/"
-        export WIP_PATH="/tmp/gazebo_sim"
+        export WIP_PATH="/tmp/rllib_gazebo"
         export RES_FILE="${HOSTNAME}.tar.gz"
 
         if [[ -d $WIP_PATH ]]

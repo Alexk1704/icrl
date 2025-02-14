@@ -85,40 +85,38 @@ function build_clear {
             print_info "clear all files of workspace ${1}"
             eval_state $(colcon clean workspace -y)
             ;;
-        "package")
+        "pacakge")
             print_info "clear the files of package ${1}"
             eval_state $(colcon clean packages -y --packages-select "${1}")
             ;;
     esac
 }
 
-# NOTE: comment out for deployment on cluster!
-function build_proceed {
-    case "${BUILD_CONFIG['LEVEL']}" in
-        "workspace")
-            print_info "rebuilding complete workspace ${1}"
-            eval_state $(colcon build --symlink-install --continue-on-error)
-            ;;
-        "package")
-            print_info "rebuilding solely package ${1}"
-            eval_state $(colcon build --symlink-install --continue-on-error --packages-select "${1}" --allow-overriding "${1}")
-            ;;
-    esac
-}
-
-# NOTE: comment in for deployment on cluster!
 # function build_proceed {
 #     case "${BUILD_CONFIG['LEVEL']}" in
 #         "workspace")
 #             print_info "rebuilding complete workspace ${1}"
-#             eval_state $(colcon build --continue-on-error)
+#             eval_state $(colcon build --symlink-install --continue-on-error)
 #             ;;
 #         "package")
 #             print_info "rebuilding solely package ${1}"
-#             eval_state $(colcon build --continue-on-error --packages-select "${1}" --allow-overriding "${1}")
+#             eval_state $(colcon build --symlink-install --continue-on-error --packages-select "${1}" --allow-overriding "${1}")
 #             ;;
 #     esac
 # }
+
+function build_proceed {
+    case "${BUILD_CONFIG['LEVEL']}" in
+        "workspace")
+            print_info "rebuilding complete workspace ${1}"
+            eval_state $(colcon build --continue-on-error)
+            ;;
+        "package")
+            print_info "rebuilding solely package ${1}"
+            eval_state $(colcon build --continue-on-error --packages-select "${1}" --allow-overriding "${1}")
+            ;;
+    esac
+}
 
 function build_source {
     case "${BUILD_CONFIG['LEVEL']}" in

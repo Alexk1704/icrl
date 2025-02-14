@@ -121,6 +121,7 @@ function backup_action {
 
 if (( $EXIT_CODE != 0 ))
     then
+        backup_logs "ray" "${TUNE_TEMP_DIR}/" "${DAT_PATH}/${EXP_ID}/ray/"
         backup_logs "ros" "${HOME}/.ros/" "${DAT_PATH}/${EXP_ID}/ros/"
         backup_logs "gz"  "${HOME}/.gz/"  "${DAT_PATH}/${EXP_ID}/gz/"
 fi

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #############################################################################################################################
-# This script keeps all settings to customize the execution behavior of the gazebo_sim project!                             #
+# This script keeps all settings to customize the execution behavior of the rllib_gazebo project!                           #
 #                                                                                                                           #
 # You can setup both, the global behavior (COMMON_CONFIG) and local behaviors (<COMPONENT>_CONFIG).                         #
 # For each component parameters are defined together wither their corresponding value as hashmap.                           #
@@ -71,9 +71,9 @@ declare -A CHECK_CONFIG=(
 
 # EXECUTE - EXECUTE - EXECUTE - EXECUTE - EXECUTE - EXECUTE - EXECUTE - EXECUTE - EXECUTE - EXECUTE - EXECUTE - EXECUTE - EXE
 declare -A EXECUTE_CONFIG=(
-    ["PROFILE"]="no"
+    ["PROFILE"]="yes"
     ["DEBUG"]="yes"
-    ["GAZEBO"]="gui"
+    ["GAZEBO"]="headless"
     ["PRIORITY"]="normal"
 )
 # EXECUTE - EXECUTE - EXECUTE - EXECUTE - EXECUTE - EXECUTE - EXECUTE - EXECUTE - EXECUTE - EXECUTE - EXECUTE - EXECUTE - EXE

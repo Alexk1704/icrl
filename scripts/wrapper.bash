@@ -38,21 +38,19 @@ echo "Script ${CALLEE_SOURCE} invoked via $(cat /proc/${PPID}/comm) with ${CNT} 
 export COMPONENTS=("$(ls ${CALLEE_PATH}/components/*.bash)")
 
 # somehow define default invocations within the corresponding config?
-MIN=("ENVIRON" "PREPARE" "BUILD" "DEPLOY" "CHECK" "EXECUTE")
-MIN_2=("ENVIRON" "PREPARE" "BUILD" "DEPLOY" "CHECK" "EXECUTE" "BACKUP" "BUNDLE")
+MIN=("ENVIRON" "PREPARE" "BUILD" "DEPLOY" "CHECK" "EXECUTE" "BACKUP" "BUNDLE")
 FULL=("ENVIRON" "PREPARE" "BUILD" "CLONE" "DEPLOY" "CHECK" "EXECUTE" "BACKUP" "WIPE" "AWAIT" "BUNDLE" "RELEASE" "REPLACE" "CLEANUP")
 
 if [[ -z $ARGS ]]
-    then ARGS=("${MIN[@]}")
-    #then ARGS=("${MIN_2[@]}")
-    #then ARGS=("${FULL[@]}")
+    # then ARGS=("${MIN[@]}")
+    then ARGS=("${FULL[@]}")
 fi
 
 #----------------------------------------------------------------------------------------------------------------------------
 
 # source "${CALLEE_PATH}/configs/default.bash" # use this for debugging
-source "${CALLEE_PATH}/configs/bash.bash" # use this for your machine
-# source "${CALLEE_PATH}/configs/slurm.bash" # use this for the cluster
+# source "${CALLEE_PATH}/configs/bash.bash" # use this for your machine
+source "${CALLEE_PATH}/configs/slurm.bash" # use this for the cluster
 
 source "${CALLEE_PATH}/utils/template.bash"
 source "${CALLEE_PATH}/utils/functions.bash"

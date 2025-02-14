@@ -103,10 +103,8 @@ declare -r -A REMOTE_MOUNTS=(
 #----------------------------------------------------------------------------------------------------------------------------
 
 declare -r -A PROJECT_USERS=(
-    ["clusteruser00"]="Alexander Gepperth"
     ["clusteruser01"]="Benedikt Bagus"
     ["clusteruser03"]="Alexander Krawczyk"
-    ["clusteruser04"]="Yannick Denker"
 )
 
 declare -r -A PROJECT_GROUPS=(
@@ -118,7 +116,7 @@ declare -r -A PROJECT_GROUPS=(
 # no nestes structs in bash possible
 declare -r -A BUILD_SCHEME=(
     ["base"]="ros_gz_interfaces ros_gz_bridge ros_gz_sim"
-    ["devel"]="custom_interfaces gazebo_sim"
+    ["devel"]="custom_interfaces rllib_gazebo"
 )
 
 declare -r -a WORKSPACES=(
@@ -134,6 +132,6 @@ declare -r -a BASE_PACKAGES=(
 
 declare -r -a DEVEL_PACKAGES=(
     "custom_interfaces"
-    "gazebo_sim"
+    "rllib_gazebo"
 )
 # FURTHER - FURTHER - FURTHER - FURTHER - FURTHER - FURTHER - FURTHER - FURTHER - FURTHER - FURTHER - FURTHER - FURTHER - FUR

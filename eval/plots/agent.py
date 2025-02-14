@@ -12,10 +12,9 @@ parser.add_argument('--custom_1', type=str, default='default_agent_1', help='cus
 parser.add_argument('--custom_2', type=str, default='default_agent_2', help='custom_2 agent help')
 
 
-TIME_DELTA = 1/6
+TIME_DELTA = 1/2
 WHEEL_SEPARATION = 0.1
 ACTION_QUANTIZATION = [0.0, 0.25, 0.5]
-ACTION_QUANTIZATION = [0.1, 0.3, 0.4, 0.5]
 
 TRACK_TILES = {
     'straight':     ((   0, 5000), (   0,  500)),
@@ -32,41 +31,13 @@ TRACK_TILES = {
     'infinity_lr':  ((4250, 5000), (3750, 5000)),
 }
 
-TRACK_TILES = {
-    'straight': ((0, 5000), (0, 500)),
-    'zero_1_l': ((1050, 1350), (2700, 2800)),
-    'zero_2_l': ((1050, 1350), (2950, 3050)),
-    'zero_3_l': ((1050, 1350), (3200, 3400)),
-    'zero_4_l': ((1050, 1350), (3400, 3600)),
-    'zero_5_l': ((1050, 1350), (3600, 3850)),
-    'zero_6_l': ((1050, 1350), (3850, 4050)),
-    'circle_1_l': ((1400, 1600), (2700, 2800)),
-    'circle_2_l': ((1400, 1600), (2950, 3050)),
-    'circle_3_l': ((1400, 1600), (3200, 3400)),
-    'circle_4_l': ((1400, 1600), (3400, 3600)),
-    'circle_5_l': ((1400, 1600), (3600, 3850)),
-    'circle_6_l': ((1400, 1600), (3850, 4050)),
-    'zero_1_r': ((1050, 1350), (2700, 2800)),
-    'zero_2_r': ((1050, 1350), (2950, 3050)),
-    'zero_3_r': ((1050, 1350), (3200, 3400)),
-    'zero_4_r': ((1050, 1350), (3400, 3600)),
-    'zero_5_r': ((1050, 1350), (3600, 3850)),
-    'zero_6_r': ((1050, 1350), (3850, 4050)),
-    'circle_1_r': ((1400, 1600), (2700, 2800)),
-    'circle_2_r': ((1400, 1600), (2950, 3050)),
-    'circle_3_r': ((1400, 1600), (3200, 3400)),
-    'circle_4_r': ((1400, 1600), (3400, 3600)),
-    'circle_5_r': ((1400, 1600), (3600, 3850)),
-    'circle_6_r': ((1400, 1600), (3850, 4050)),
-}
-
 
 def entry(struct, kwargs):
     helpers.exec(struct, kwargs, return_plots())
 
 def return_plots():
-    # yield plot_spawn
-    # yield plot_odometry
+    yield plot_spawn
+    yield plot_odometry
     yield plot_trajectory
 
 
@@ -93,6 +64,8 @@ def plot_odometry():
 
 # use odo data from sim + spawns => store both in debug
 def plot_trajectory():
+    labels, data = helpers.extract_debug(['spawn', 'odometry'])
+
     import numpy as np
     from PIL import Image
     from scipy.interpolate import interp1d
@@ -124,95 +97,34 @@ def plot_trajectory():
 
         return np.array([temp_x, -temp_y]).T                    # negate Y
 
-    # path = os.path.join(os.environ['GIT_PATH'], 'icrl/models/ground_plane/tracks/active.png')
-    path = os.path.join(os.environ['GIT_PATH'], 'icrl/models/ground_plane/tracks/test.png')
+    path = os.path.join(os.environ['GIT_PATH'], 'icrl/models/ground_plane/tracks/active.png')
     img = np.array(Image.open(path))
-
-    labels, data = helpers.extract_debug(['spawn', 'odometry'])
-    counters = helpers.DATA['info']['counters']
-    print('len(counters):', len(counters))
 
     overlay = np.full_like(img, 0.)
     spawn, odometry = data
-    print('len(spawn["pose"]):', len(spawn['pose']))
-    print('len(odometry["pose"]):', len(odometry['pose']))
-
-    data_color = (255,   0,   0, 255)
-    data_color = (  0,   0, 255, 255)
-    fill_color = (  0, 255,   0, 255)
-
-    last = 0
-    for episodes, offsets, locations in zip(counters, spawn['pose'], odometry['pose']):
-        print('len(episodes):', len(episodes))
-        print('sum(episodes):', sum(episodes))
-
-        print('offsets.shape:', offsets.shape)
-        print('locations.shape:', locations.shape)
-
-        # offsets += np.array([0, 0, 0, *euler_to_quaternion([0, 0, 90])])
-
-        print(offsets[0])
-        print(locations[0])
-        print(locations[0] - last)
-
-        '''
-        index = 0
-        for episode, offset in zip(episodes, offsets):
-            rescale = int(np.floor(episode * (len(locations) / sum(episodes))))
-            # rescale = int(np.round(episode * (len(locations) / sum(episodes))))
-            # rescale = int(np.ceil(episode * (len(locations) / sum(episodes))))
-
-            lower = index
-            upper = lower + rescale
-            index = upper
-
-            # temp = locations[upper - 1].copy()
-            # print(temp)
-            locations[lower:upper] -= last
-            locations[lower:upper] += offset
-            # last = temp
-            # print(last)
-
-            last = locations[upper - 1] - offset
-            # last = locations[upper - 1] + last
-        '''
-
-        trajectory = np.squeeze(locations)
+    print(spawn.shape)
+    print(odometry.shape)
+    for offset, current in zip(spawn['pose'], odometry['pose']):
+        trajectory = current + offset
 
         indices = []
         for entry in trajectory:
             index = np.round(m_to_px(entry), 0)
             indices.append(index.astype(int))
         indices = np.stack(indices)
+        print('##########')
+        print(indices)
 
-        print('np.min(indices[:, 0]):', np.min(indices[:, 0]))
-        print('np.min(indices[:, 1]):', np.min(indices[:, 1]))
-        print('np.max(indices[:, 0]):', np.max(indices[:, 0]))
-        print('np.max(indices[:, 1]):', np.max(indices[:, 1]))
+        func = interp1d(indices[:, 0], indices[:, 1])
+        # y = np.interp(x, indices[:, 0], indices[:, 1])
+        overlay[indices[:, 0], indices[:, 1]] = (255, 0, 0, 255)
+        for x, diff in zip(indices[:, 0], np.diff(indices[:, 0])):
+            print('----------')
+            print(x, diff)
+            x_pos = np.arange(x + 1, diff)
+            y_pos = func(x_pos)
+            overlay[x_pos, y_pos] = (0, 0, 255, 255)
 
-        lower_check = [0, 0]
-        upper_check = [5000, 5000]
-        indices = indices[np.all(indices > lower_check, axis=1) & np.all(indices < upper_check, axis=1)]
-
-        if data_color == (255, 0, 0, 255): data_color = (0, 0, 255, 255)
-        if data_color == (0, 0, 255, 255): data_color = (255, 0, 0, 255)
-
-        if len(indices) > 0:
-            func = interp1d(indices[:, 0], indices[:, 1])
-            # y = np.interp(x, indices[:, 0], indices[:, 1])
-            overlay[indices[:, 0], indices[:, 1]] = data_color
-            # for x, diff in zip(indices[:, 0], np.diff(indices[:, 0])):
-            #     for x_diff in np.arange(diff):
-            #         x_pos = x + x_diff
-            #         y_pos = func(x_pos)
-            #         x_pos = np.round(x_pos, 0).astype(int)
-            #         y_pos = np.round(y_pos, 0).astype(int)
-            #         # if x_pos < 0 and x_pos > 5000: continue
-            #         # if y_pos < 0 and y_pos > 5000: continue
-            #         overlay[x_pos, y_pos] = fill_color
-
-        # ACHTUNG: zwecks debugging eingerückt!!!
-    # =>
     img += overlay
 
     fig = helpers.V.new_figure(size=(19.2, 12))

@@ -45,10 +45,10 @@ PROCESSES=(
     "ros_gz_bridge"
     "gz.*sim"
     "line_following.sdf"
-    "gazebo_simulator"
     "profiler.py"
     "DebugInfos.py"
-    "LFAgent.py"
+    "GazeboSim.py"
+    "RLLibAgent.py"
 )
 
 WS_ENTRY="${SRC_PATH}/${CRL_REPOSITORY}/workspace"
@@ -122,22 +122,15 @@ if [[ "${EXECUTE_CONFIG['PROFILE']}" == "yes" ]]
         } &
 fi
 
-# NOTE: Simulation starts on call!
-# case "${EXECUTE_CONFIG['GAZEBO']}" in
-#     "gui")      sim_options="-r" ;;
-#     "headless") sim_options="-r -s --headless-rendering" ;;
-# esac
-
 case "${EXECUTE_CONFIG['GAZEBO']}" in
-    "gui")      sim_options="" ;;
-    "headless") sim_options="-s --headless-rendering" ;;
+    "gui")      sim_options="-r" ;;
+    "headless") sim_options="-r -s --headless-rendering" ;;
 esac
-
 
 print_info "starting Gazebo simulation"
 {
     gz sim ${sim_options} "${SRC_PATH}/${CRL_REPOSITORY}/line_following.sdf" \
-    ; execute_state "gazebo_simulator" ;
+    ; execute_state "gzazebo simulator" ;
 } &
 
 # zum testen der topics
@@ -185,10 +178,10 @@ print_info "starting ROS-GZ bridge"
 
 if [[ "${EXECUTE_CONFIG['DEBUG']}" == "yes" ]]
     then
-        print_info "starting debug script"d
+        print_info "starting debug script"
         {
             python3 -u "${CODE_ENTRY}/debug/DebugInfos.py" \
-            --odometry    1 6 6                            \
+            --odometry    1 5 5                            \
             --clock       0 0 0                            \
             --image       0 0 0                            \
             --twist       0 0 0                            \
@@ -199,24 +192,81 @@ if [[ "${EXECUTE_CONFIG['DEBUG']}" == "yes" ]]
         } &
 fi
 
-print_info "starting gazebo simulation agent"
+print_info "starting simulation script"
 {
-    python3 -u "${CODE_ENTRY}/agent/LFAgent.py"                                                                             \
+    python3 -u "${CODE_ENTRY}/simulation/GazeboSim.py"                                                                      \
         --fuck_it                                           no                                                              \
         --seed                                              42                                                              \
         --exp_id                                            "${EXP_ID}"                                                     \
         --root_dir                                          "${DAT_PATH}"                                                   \
-        --debug                                             yes                                                             \
-        --verbose                                           yes                                                             \
+        --debug                                             no                                                              \
+        --verbose                                           no                                                              \
         --logging_mode                                      sync                                                            \
-        --console_level                                     4                                                               \
+        --console_level                                     0                                                               \
+        --file_level                                        4                                                               \
+        --report_level                                      switch                                                          \
+        --report_frequency                                  1                                                               \
+        --report_entities                                                                                                   \
+        --environment                                       LF                                                              \
+        --scenario                                          env-shift                                                       \
+        --line_mode                                         c                                                               \
+        --line_detection                                    a                                                               \
+        --line_threshold                                    0.25                                                            \
+        --transition_timedelta                              0.5                                                             \
+        --rtf_limits                                        0.5 10.0                                                        \
+        --adapt_rtf                                         no                                                              \
+        --default_rtf                                       1.0                                                             \
+        --force_waiting                                     yes                                                             \
+        --max_steps_per_episode                             10000                                                           \
+        --max_steps_without_line                            1                                                               \
+        --sequence_length                                   3                                                               \
+        --repeating_steps                                   1                                                               \
+        --retry_attempts                                    no                                                              \
+        --retry_boundary                                    5                                                               \
+        --state_shape                                       4 100 3                                                         \
+        --action_shape                                      2                                                               \
+        --state_quantization                                0.0 1.0 1000                                                    \
+        --action_quantization                               0.0 0.5 3                                                       \
+        --state_normalization                               -1.0 1.0                                                        \
+        --action_normalization                              -1.0 1.0                                                        \
+        --reward_terminal                                   -2.0                                                            \
+        --reward_calculation                                s a                                                             \
+        --reward_calculation_weights                        0.5 0.5                                                         \
+        --reward_clipping                                   no                                                              \
+        --reward_clipping_range                             -1.0 1.0                                                        \
+        --reward_normalization                              no                                                              \
+        --reward_normalization_range                        -1.0 1.0                                                        \
+        --random_inter_task                                 no                                                              \
+        --random_intra_task                                 no                                                              \
+        --sensor_perturbations                                                                                              \
+        --actuator_perturbations                                                                                            \
+        --connection_latency                                no                                                              \
+        --connection_jitter                                 no                                                              \
+        --connection_loss                                   no                                                              \
+    ; execute_state "GazeboSim" ;
+} &
+
+print_info "starting rllib script"
+{
+    python3 -u "${CODE_ENTRY}/learner/RLLibAgent.py"                                                                        \
+        --fuck_it                                           no                                                              \
+        --seed                                              42                                                              \
+        --exp_id                                            "${EXP_ID}"                                                     \
+        --root_dir                                          "${DAT_PATH}"                                                   \
+        --debug                                             no                                                              \
+        --verbose                                           no                                                              \
+        --logging_mode                                      sync                                                            \
+        --console_level                                     0                                                               \
         --file_level                                        4                                                               \
         --report_level                                      switch                                                          \
         --report_frequency                                  1                                                               \
         --report_entities                                                                                                   \
         --cpu_only                                          no                                                              \
-        --train_subtasks                                    straight zero_3_r zero_3_l                                      \
-        --eval_subtasks                                     straight zero_3_r zero_3_l                                      \
+        --checkpointing                                     no                                                              \
+        --environment                                       LF                                                              \
+        --scenario                                          env-shift                                                       \
+        --train_subtasks                                    straight snake                                                  \
+        --eval_subtasks                                     straight snake                                                  \
         --context_change                                    alternately                                                     \
         --context_reset                                     partial                                                         \
         --train_swap                                        1                                                               \
@@ -224,80 +274,86 @@ print_info "starting gazebo simulation agent"
         --task_repetition                                   1                                                               \
         --begin_with                                        eval                                                            \
         --end_with                                          eval                                                            \
+        --training_duration                                 1000                                                            \
+        --evaluation_duration                               100                                                             \
         --training_duration_unit                            timesteps                                                       \
         --evaluation_duration_unit                          timesteps                                                       \
-        --training_duration                                 25000                                                           \
-        --evaluation_duration                               250                                                             \
         --eval_random_track                                 no                                                              \
+        --eval_random_spawn                                 no                                                              \
         --eval_random_position                              no                                                              \
         --eval_random_orientation                           no                                                              \
         --train_random_track                                no                                                              \
+        --train_random_spawn                                no                                                              \
         --train_random_position                             no                                                              \
-        --train_random_orientation                          no                                                              \
+        --train_random_orientation                          yes                                                             \
+        --optimizer                                         sgd                                                             \
+        --sgd_momentum                                      0.0                                                             \
+        --adam_beta1                                        0.9                                                             \
+        --adam_beta2                                        0.999                                                           \
+        --lr                                                0.001                                                           \
+        --lr_schedule                                                                                                       \
         --train_batch_size                                  32                                                              \
-        --gamma                                             0.9                                                             \
-        --algorithm                                         QGMM                                                            \
-        --checkpointing                                     yes                                                             \
-        --start_as_task                                     0                                                               \
-        --load_ckpt                                         \
-        --dqn_fc1_dims                                      256                                                             \
-        --dqn_fc2_dims                                      128                                                             \
-        --dqn_adam_lr                                       1e-3                                                            \
-        --dqn_target_network                                yes                                                             \
-        --dqn_target_network_update_freq                    1000                                                            \
-        --dqn_dueling                                       yes                                                             \
-        --qgmm_K                                            256                                                             \
-        --qgmm_eps_0                                        0.011                                                           \
-        --qgmm_eps_inf                                      0.01                                                            \
-        --qgmm_lambda_sigma                                 0.                                                              \
-        --qgmm_lambda_pi                                    0.                                                              \
-        --qgmm_alpha                                        0.011                                                           \
-        --qgmm_gamma                                        0.90                                                            \
-        --qgmm_regEps                                       0.1                                                             \
-        --qgmm_lambda_W                                     1.0                                                             \
-        --qgmm_lambda_b                                     0.0                                                             \
-        --qgmm_reset_somSigma                               0.4                                                             \
+        --train_batch_iteration                             1                                                               \
+        --update_freq                                       1                                                               \
+        --update_freq_unit                                  timesteps                                                       \
+        --gamma                                             0.95                                                            \
+        --algorithm                                         QL                                                              \
+        --backend                                           DQN                                                             \
+        --model_type                                        CNN                                                             \
+        --double_q                                          no                                                              \
+        --dueling                                           no                                                              \
+        --training_intensity                                                                                                \
+        --target_network                                    no                                                              \
+        --target_network_update_freq                        100                                                             \
+        --target_network_update_freq_unit                   timesteps                                                       \
+        --tau                                               1.0                                                             \
+        --n_step                                            1                                                               \
+        --noisy                                             no                                                              \
+        --noisy_sigma0                                      0.5                                                             \
+        --td_error_loss_fn                                  huber                                                           \
+        --fcnet_hiddens                                     64 32                                                           \
+        --fcnet_activation                                  tanh                                                            \
+        --hiddens                                           32                                                              \
+        --post_fcnet_hiddens                                                                                                \
+        --post_fcnet_activation                                                                                             \
+        --no_final_linear                                   no                                                              \
+        --free_log_std                                      no                                                              \
+        --vf_share_layers                                   yes                                                             \
+        --qgmm_ltm_include_top                              yes                                                             \
         --qgmm_somSigma_sampling                            yes                                                             \
-        --qgmm_log_protos_each_n                            1000                                                            \
-        --qgmm_init_forward                                 no                                                              \
+        --qgmm_K                                            100                                                             \
+        --qgmm_reset_factor                                 0.1                                                             \
+        --qgmm_alpha                                        0.011                                                           \
+        --qgmm_gamma                                        0.95                                                            \
+        --qgmm_lambda_b                                     0.0                                                             \
+        --qgmm_regEps                                       0.05                                                            \
+        --qgmm_loss_fn                                      q_learning                                                      \
+        --qgmm_load_ckpt                                                                                                    \
         --exploration                                       eps-greedy                                                      \
         --initial_epsilon                                   1.0                                                             \
-        --epsilon_delta                                     7e-5                                                            \
         --final_epsilon                                     0.01                                                            \
-        --eps_replay_factor                                 1.0                                                             \
-        --replay_buffer                                     default                                                         \
-        --capacity                                          32                                                              \
+        --warmup_timesteps                                  0                                                               \
+        --epsilon_timesteps                                 1000                                                            \
+        --interpolation                                     exp                                                             \
+        --schedule_power                                    2.0                                                             \
+        --schedule_decay                                    0.01                                                            \
+        --initial_stddev                                    1.0                                                             \
+        --random_timesteps                                  1000                                                            \
+        --replay_buffer                                     reservoir                                                       \
+        --num_steps_sampled_before_learning_starts          0                                                               \
+        --replay_sequence_length                            1                                                               \
+        --capacity                                          1000                                                            \
         --per_alpha                                         0.6                                                             \
-        --per_beta                                          0.6                                                             \
-        --per_eps                                           1e-6                                                            \
+        --per_beta                                          0.4                                                             \
+        --per_eps                                           0.000001                                                        \
         --processed_features                                gs                                                              \
-        --sequence_stacking                                 v                                                               \
+        --sequence_stacking                                 h                                                               \
         --sequence_length                                   3                                                               \
         --input_shape                                       4 100                                                           \
         --output_shape                                      9                                                               \
-        --line_mode                                         c                                                               \
-        --line_detection                                    a                                                               \
-        --line_threshold                                    0.25                                                            \
-        --step_duration_nsec                                125e+6                                                          \
-        --max_steps_per_episode                             10000                                                           \
-        --max_steps_without_line                            1                                                               \
-        --retry_attempts                                    no                                                              \
-        --retry_boundary                                    5                                                               \
-        --state_shape                                       4 100 3                                                         \
-        --action_shape                                      2                                                               \
-        --state_quantization                                -1.0 1.0 1000                                                   \
-        --action_quantization                               0.2 0.5 3                                                       \
-        --state_normalization                               -1.0 1.0                                                        \
-        --action_normalization                              -1.0 1.0                                                        \
-        --reward_terminal                                   -10.0                                                           \
-        --reward_calculation                                s                                                               \
-        --reward_calculation_weights                        1.0                                                             \
-        --reward_clipping                                   no                                                              \
-        --reward_clipping_range                             -1.0 1.0                                                        \
-        --reward_normalization                              yes                                                             \
-        --reward_normalization_range                        0.0 1.0                                                         \
-    ; execute_state "LFAgent" ;
+    ; execute_state "RLLibAgent" ;
 } &
+
 
 print_info "set daemon for killswitch"
 wait -n ; EXIT_CODE=$?

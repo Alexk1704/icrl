@@ -15,10 +15,10 @@ from utils import tools
 
 ''' Usage:
 export PYTHONPATH=$PYTHONPATH:$GIT_PATH/sccl/src
-export PYTHONPATH=$PYTHONPATH:$GIT_PATH/icrl/workspace/devel/src/gazebo_sim
+export PYTHONPATH=$PYTHONPATH:$GIT_PATH/icrl/workspace/devel/src/rllib_gazebo
 
 Local usage for a single results directory:
-python3 $GIT_PATH/icrl/eval/main.py --root /tmp/ak/gazebo_sim/dat/default__E0-W0-C0-R0 --egge no
+python3 $GIT_PATH/icrl/eval/main.py --root /tmp/ak/rllib_gazebo/dat/default__E0-W0-C0-R0 --egge no
 
 Usage for generated experiment structure from EGGE:
 python3 $GIT_PATH/icrl/eval/main.py --root ~/Desktop/VALIDATE__24-03-19-14-18-58/ --state success --wrap_selector 0 --comb_selector 0 1
@@ -158,35 +158,33 @@ def resolve_eval_data(path):
 def process_db_entries(csv_files):
     if os.path.basename(file) == 'db.csv':
         db = pd.read_csv(file, converters={'json_args': json.loads})
-        entries = {}
-        for _, entry in db.iterrows():
-            if entry['eval_id'] not in entries:
-                entries.update({ entry['eval_id'] : {} })
-            if entry['wrap_id'] not in entries[entry['eval_id']]:
-                entries[entry['eval_id']].update({ entry['wrap_id'] : {} })
-            if entry['comb_id'] not in entries[entry['eval_id']][entry['wrap_id']]:
-                entries[entry['eval_id']][entry['wrap_id']].update({ entry['comb_id'] : {} })
-            if entry['run_id'] not in entries[entry['eval_id']][entry['wrap_id']][entry['comb_id']]:
-                entries[entry['eval_id']][entry['wrap_id']][entry['comb_id']].update({ entry['run_id'] : {} })
 
-            entries[entry['eval_id']][entry['wrap_id']][entry['comb_id']][entry['run_id']] = {
-                'info':
-                {
-                    'exp_id': entry['exp_id'],
-                    'json_args': entry['json_args'],
+        entries = {
+            entry['eval_id']: {
+                entry['wrap_id']: {
+                    entry['comb_id']: {
+                        entry['run_id']: {
+                            'info': {
+                                'exp_id': entry['exp_id'],
+                                'json_args': entry['json_args'],
+                            }
+                        }
+                    }
                 }
             }
+        for _, entry in db.iterrows()}
+
         return entries
 
 def filter_evaluation(entries, eval_selector, wrap_selector, comb_selector, run_selector):
     for eval_key, eval_dict in copy.deepcopy(entries).items():
-        if len(eval_selector) == 0 or eval_key in eval_selector:
+        if eval_key in eval_selector:
             for wrap_key, wrap_dict in eval_dict.items():
-                if len(wrap_selector) == 0 or wrap_key in wrap_selector:
+                if wrap_key in wrap_selector:
                     for comb_key, comb_dict in wrap_dict.items():
-                        if len(comb_selector) == 0 or comb_key in comb_selector:
+                        if comb_key not in comb_selector:
                             for run_key, _ in comb_dict.items():
-                                if len(run_selector) == 0 or run_key in run_selector:
+                                if run_key in run_selector:
                                     pass
                                 else:
                                     entries[eval_key][wrap_key][comb_key].pop(run_key)
@@ -219,9 +217,8 @@ def collect_experiments(entries, egge, dir_path, state):
                     if len(run_dict) == 0:
                         json_args = {}
                         try:
-                            json_args.update({'ALL': tools.load_file(*tools.resolve_pattern(os.path.join(dir_path, 'cfgs'), '**/ALL.*'))})
-                            # json_args.update({'FRONTEND': tools.load_file(*tools.resolve_pattern(os.path.join(dir_path, 'cfgs'), '**/FRONTEND.*'))})
-                            # json_args.update({'BACKEND': tools.load_file(*tools.resolve_pattern(os.path.join(dir_path, 'cfgs'), '**/BACKEND.*'))})
+                            json_args.update({'FRONTEND': tools.load_file(*tools.resolve_pattern(os.path.join(dir_path, 'cfgs'), '**/FRONTEND.*'))})
+                            json_args.update({'BACKEND': tools.load_file(*tools.resolve_pattern(os.path.join(dir_path, 'cfgs'), '**/BACKEND.*'))})
                         except: pass
                         temp = {'info': {'exp_id': exp_id, 'json_args': json_args}}
                         entries[eval_key][wrap_key][comb_key][run_key] = temp
@@ -239,7 +236,6 @@ def collect_experiments(entries, egge, dir_path, state):
                             'counters': lookup['counters'],
                             'paths': {name: os.path.join(base_path, name) for name in ['data', 'debug', 'protos']},
                         }
-                        if args.debug == 'yes': print(info)
                         raw = resolve_experiment_data(info, lookup)
                         entries[eval_key][wrap_key][comb_key][run_key]['info'].update(info)
                         entries[eval_key][wrap_key][comb_key][run_key]['raw'] = raw
@@ -262,8 +258,7 @@ def resolve_experiment_data(info, lookup):
                     name = '.'.join(filter(lambda x: x != '' and re.match('|'.join(levels + [str(counter)]), x) == None, path.split('/')))
 
                     yield name, tools.load_file(file)
-            except:
-                if not 'png' in file: print(f'Data cannot be resolved: {file}')
+            except: print(f'Data cannot be resolved: {file}')
 
     temp = []
     for i, (task, counter) in enumerate(zip(info['tasks'], info['counters'])):
@@ -351,7 +346,7 @@ if args.debug == 'yes':
 if args.egge == 'yes': # E-W-C-R with db-file
     entries, dirs, files, files_by_type = resolve_eval_data(args.root)
 
-    for file in files_by_type['.csv']:
+    for file in files_by_type['csv']:
         print('Next file:', file)
 
         choice = input('Continue (y/n)? ')
@@ -362,10 +357,7 @@ if args.egge == 'yes': # E-W-C-R with db-file
         print('processing data')
         start_time = time.time()
         exps = process_db_entries(file)
-        # print(exps)
-        print(args)
         exps = filter_evaluation(exps, args.eval_selector, args.wrap_selector, args.comb_selector, args.run_selector)
-        print(exps)
         exps = collect_experiments(exps, args.egge, args.root, args.state)
         end_time = time.time()
         print('elapsed time: {:.3f}'.format(end_time - start_time))
@@ -382,30 +374,7 @@ if args.egge == 'no': # E-W-C-R without db-file
 
     wrapper = [exps]
 
-
-import numpy as np
 for exps in wrapper:
-    # print(exps['0']['0']['0']['0']['info']['tasks'])
-    # print(len(exps['0']['0']['0']['0']['info']['counters'][0]))
-    # print(len(exps['0']['0']['0']['0']['info']['counters'][1]))
-    # # 'raw' contains single runs
-    # print(exps['0']['0']['0']['0']['raw'][0]['subtask'])
-    # # learner data
-    # tr_iter_time = np.array(exps['0']['0']['0']['0']['raw'][0]['data']['train_iter_time'])
-    # tr_q_next_qs = np.array(exps['0']['0']['0']['0']['raw'][0]['data']['train_q_next_qs'])
-    # tr_tar_qs = np.array(exps['0']['0']['0']['0']['raw'][0]['data']['train_target_qs'])
-    # print(tr_iter_time.shape, tr_q_next_qs.shape, tr_tar_qs.shape)
-    # # debug data
-    #     # odo
-    # odo_pose = np.array(exps['0']['0']['0']['0']['raw'][0]['debug']['odometry']['pose'])
-    # odo_twist = np.array(exps['0']['0']['0']['0']['raw'][0]['debug']['odometry']['twist'])
-    # print(odo_pose.shape, odo_twist.shape)
-    #     # samples
-    # samples = exps['0']['0']['0']['0']['raw'][0]['debug']['samples']
-    # spawns = np.array(exps['0']['0']['0']['0']['raw'][0]['debug']['spawns']['pose'])
-    # print(spawns.shape)
-    # print(samples)
-
     if args.debug == 'yes':
         print('keys dict:')
         pprint.pprint(debug(exps))
