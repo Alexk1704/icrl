@@ -1,8 +1,8 @@
 # Intentional Continual Reinforcement Learning (ICRL)
 
-This framework is written to facilitate research in the field of Continual Reinforcement Learning (CRL) based on a robotic simulation running with Gazebo and ROS2. The reinforcement learning policy is defined by a high-level package written in Python, supporting the use of common ML frameworks such as TensorFlow and PyTorch. We use a differential-drive robot ([Pololu 3pi robot](https://www.pololu.com/product/975)) to investigate the line following scenario, but it is easy to extend it to other simulation scenarios. The `main` branch uses a software version based on RLLib (client-side code), while the `no-rllib` branch operates on a custom solution.
+This framework is written to facilitate research in the field of Continual Reinforcement Learning (CRL) based on a robotic simulation running with Gazebo and ROS2. The reinforcement learning policy is defined by a high-level package written in Python, supporting the use of common ML frameworks such as TensorFlow and PyTorch. We use a differential-drive robot ([Pololu 3pi robot](https://www.pololu.com/product/975)) to investigate the line following scenario, but it is easy to extend it to other simulation scenarios. The `main` branch uses a software version based on ["RLLib"](https://docs.ray.io/en/latest/rllib/index.html) for the client-side code, while the `no-rllib` branch operates on a custom solution.
 
-This library was used to generate the empirical data for two accepted conference articles:
+This library was used to run the experiments that produced the empirical results for two accepted conference papers:
 
 1) ["Continual Reinforcement Learning Without Replay Buffers"](https://ieeexplore.ieee.org/abstract/document/10705256)
 ```
@@ -29,31 +29,45 @@ This library was used to generate the empirical data for two accepted conference
 
 ## Main components description
 
-### Package `"./workspace/base/*"` (Written and maintained by Benedikt Bagus)
-This package allows communication between the Gazebo Simulator and ROS2. It contains all the necessary interfaces to allow data exchange between the two. It is first compiled and built to be deployed on the running system, whether it is a local node or distributed via the workload manager (Slurm/Singularity in our case).
+### Base workspace `"./workspace/base/*"` (Written and maintained by Benedikt Bagus)
+This workspace contains communication related packages written in C++ to enable message bridging between Gazebo and ROS2. It comes with all the necessary interfaces, as well as the bridge itself to allow the data exchange between the two. It is first compiled and built to be deployed on the executing system, whether it is a local node or distributed via the workload manager (Slurm/Singularity in our case).
+
 1) `ros_gz_bridge` \
 This component provides the network bridge that allows messages to be exchanged between ROS2 and Gazebo Transport.
 1) `ros_gz_interfaces` \
 Defines the message and service data structures to allow an interaction between ROS2 and Gazebo.
-2) `ros_gz_sim` \
+1) `ros_gz_sim` \
 Contains various utilities for conveniently integrating ROS2 into Gazebo, such as preparing launch files and providing ROS-enabled executables.
 
-### Package `"./eval/*` (Written and maintained by Benedikt Bagus, Alexander Krawczyk)
-This package is currently in an incomplete state as we have started a major rework of the API. The basic principles behind these components are to allow generic evaluation for all kinds of environments and scenarios, regardless of the simulation or policy being used. Besides providing the obvious plot formats, such as scatter, bar, violing and pie plots, we also considered the possibility of visualizing the robot's trajectory, showing the distribution of certain states and actions as a heat map. This could speed up debugging without the need to observe the live simulation and facilitate numerical investigation of real-time odometry data.
 
-### Package `"./workspace/devel/*"` (Written and maintained by Benedikt Bagus, Alexander Krawczyk)
-The `gazebo_sim` package contains the "client-side" source code, i.e., starting the simulation, spawning and controlling the robotic agent, training the RL policy, evaluation, serialization of metrics, etc.
+### Devel workspace `"./workspace/devel/*"` (Written and maintained by Benedikt Bagus, Alexander Krawczyk)
+This workspace contains two packages: `custom_interfaces`, which defines the custom message types, and `gazebo_sim`, which contains the Python source code for receiving and sending data, controlling the robot, training and evaluating its policy, serializing metrics, handling spawns, and so on. It also contains several dedicated submodules:
 1) `/simulation/LineFollowing.py`: This defines and executes the **main control loop** for the specified "Line Following (LF)" scenario. It keeps the environment (a running gazebo simulation) and the operating agent (a 3Pi robot) synchronized by "stepping" through the environment. Each environment defines the track layout, sensory inputs, and possible actions. The goal for the robotic agent is to continually improve its policy by learning from rewards (Q-Learning). This loop allows the agent to learn an optimal policy for the line following track efficiently. Note, however, that this is easily adaptable to other types of RL policies, e.g. Policy Gradient (PG).
 2) `/agent/LFAgent.py`: Represents the robotic agent that interacts with the simulation environment by selectively performing actions. It also acts as an interface to the RL policy, the machine learning algorithm running in the background, which is trained and evaluated.
 3) `./workspace/devel/gazebo_sim/agent/LFLearner.py`: This defines the RL policy, i.e. Deep Q-Learning (DQN) or QGMM. 
 4) `./workspace/devel/gazebo_sim/model/*.py`: This defines and builds a concrete ML model that represents the trainable part of an RL policy. Currently we support two types of models: A Deep Neural Network (DNN) for DQN, and a Gaussian Mixture Model (GMM) for QGMM. We use the [**sccl**](https://github.com/Alexk1704/scclv2) package to create and run a functional TensorFlow model.
 5) `./workspace/devel/gazebo_sim/utils/*`: Provides some useful classes, such as buffer structures (for different types of experience replay), threading, an argument parser, data serialization, logging, and so on.
 
-### Package `"./scripts/*` (Written and maintained by Benedikt Bagus)
-`wrapper.bash`: This is the main invocation script for local users or to enable deployment via the Workload Manager.
+### Package `"./eval/*` (Written and maintained by Benedikt Bagus, Alexander Krawczyk)
+This package is currently in an incomplete state as we have started a major rework of the API. The basic principles behind these components are to allow generic evaluation for all kinds of environments and scenarios, regardless of the simulation or policy being used. Besides providing the obvious plot formats, such as scatter, bar, violin and pie plots, we also considered the possibility of visualizing the robot's trajectories as a heatmap and showing the distribution of certain states and actions as a histogram. This could speed up debugging without the need to observe the live simulation and facilitate numerical investigation of real-time odometry data.
 
-### Run instructions
+### Package `"./scripts/*` (Written and maintained by Benedikt Bagus)
+Contains the bash script `wrapper.bash`, which is the main invocation file for local users or to enable deployment via the Workload Manager. In addition, this package defines a full pipeline to support experimentation under a variety of different host systems:
+1) `components/*` \
+Each step in the pipeline is represented by its own script file, e.g., building the workspace, preparing the environment, executing the project, etc.
+1) `configs/*` \
+Includes configurations for local and remote execution.
+1) `utils/*` \
+Contains a custom subset of elementary bash commands and provides the core functionality for deploying and executing experiments.
+
+### Package `./models/` (Written and maintained by Benedikt Bagus)
+Contains SDF files of the environments and models, e.g., the Pololu 3pi robot.
+
+## Instructions
+### Setup
 Please follow the instructions in `./setup.bash` to set up your machine accordingly.
+### Execution
+Run the `./scripts/wrapper.bash` file after adjusting the script parameters.
 
 ***~ There is no free lunch (: ~***
 
